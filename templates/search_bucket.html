@@ -201,11 +201,14 @@
 
 <body>
     <div class="container">
+        {% if message %}
+        <div class="alert alert-warning">Không tìm thấy giá trị!!</div>
+        {% endif %}
         <div class="row">
-            <form method="POST" class="search-bar">
+            <form method="POST" action="." class="search-bar">
                 {% csrf_token %}
                 <input type="search" name="search" placeholder="Bucket???" pattern=".*\S.*" required>
-                <button class="search-btn" type="submit">
+                <button  class="search-btn" type="submit">
                     <span>Search</span>
                 </button>
             </form>

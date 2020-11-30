@@ -11,7 +11,7 @@ import uuid
 import os
 from Main import settings
 from django.core.files.storage import FileSystemStorage
-from .utils import handle_check_exists_bucket, handle_create_bucket_request, handle_upload_mutiplefile_in_bucket, handle_check_is_empty
+from .utils import handle_check_exists_bucket, handle_create_bucket_request, handle_upload_mutiplefile_in_bucket, handle_check_is_empty, handle_presigned_url
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 @api_view(['GET'])
@@ -148,25 +148,38 @@ def upload_final(request):
 def search_bucket(request):
     if request.method == "POST":
         bucket = request.POST['search']
-        print(bucket)
-        s3 = boto3.resource('s3')
-        resource =  s3.Bucket(bucket)
-        kaka='%s.s3.amazonaws.com' %bucket
-        # print("3131212", resource.objects.count())
-        # print("11231",resource)
-        for file in resource.objects.all():
-            # print(len(file.key))
-            # if not(file):
-            #     return render(request, 'search_bucket.html')
-            hh = 'https://%s/%s/'%(kaka,file.key)
-            print(hh)
-            print(file.key)
-            # print(file.get()['Body'].read())
-        return redirect('list')
+        if handle_check_exists_bucket(bucket) == True:
+            return redirect('list', bucket)
+        else:
+            return render(request, 'search_bucket.html', {'message':True})
     else:
         return render(request, 'search_bucket.html')
-def list_image(request):
-    return render(request, 'login.html')
+def list_image(request, bucket):
+    result = {
+        'Success':False,
+        'message':''
+    }
+    # bucket = request.POST['bucket']
+    # print('131231312',bucket)
+    pre_sign= handle_presigned_url(bucket)
+    print(pre_sign)
+    if pre_sign is None:
+        return Response(result, status= status.HTTP_400_BAD_REQUEST)
+    else:
+        url =[]
+        result['Success'] = True 
+        result['message']=''
+        for pre in pre_sign:
+            link = '%s%s'%(pre['url'], pre['fields']['key'])
+            # print(link)
+            url.append(link)
+        result['data']= {
+            'urlimages':url,
+            'bucket':bucket,
+            'presigned':pre_sign
+        }
+        # return Response(result, status = status.HTTP_200_OK) 
+        return render(request, 'listImages.html', result)
 
 
 def upload_in_request(request):
@@ -180,10 +193,10 @@ def upload_in_request(request):
     if request.method == "POST":
         bucketname = request.POST['bucket']
         files = request.FILES.getlist('files')
+        
         if handle_check_is_empty(files, bucketname) == False:
             return render(request,'upload.html', {'message':"Empty!"})
 
-        print(type(files[0]))
         if handle_upload_mutiplefile_in_bucket(files, bucketname.lower()) == True:
             return render(request,'upload.html', {'message':"Success!"})
         else:
@@ -191,3 +204,32 @@ def upload_in_request(request):
     else:
         return render(request,'upload.html')
 
+
+@api_view(['POST'])
+def list_url_demo(request):
+    result = {
+        'Success':False,
+        'message':''
+    }
+    bucket = request.POST['bucket']
+    print('131231312',bucket)
+    pre_sign= handle_presigned_url(bucket)
+    print(pre_sign)
+    if pre_sign is None:
+        return Response(result, status= status.HTTP_400_BAD_REQUEST)
+    else:
+        url =[]
+        result['Success'] = True 
+        result['message']=''
+        for pre in pre_sign:
+            print(pre)
+            print('=>>>>>>>>>>> url:', pre['url'])
+            link = '%s%s'%(pre['url'], pre['fields']['key'])
+            print(link)
+            url.append(link)
+        result['data']= {
+            'urlimages':url,
+            'bucket':bucket,
+            'presigned':pre_sign
+        }
+        return Response(result, status = status.HTTP_200_OK) 

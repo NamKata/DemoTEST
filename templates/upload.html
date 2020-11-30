@@ -86,14 +86,19 @@
         $("#file-1").fileinput({
             theme: 'fa',
             uploadUrl: '#',
-            allowedFileExtensions: ['jpg', 'png', 'gif'],
+            allowedFileExtensions: ['jpg', 'png', 'gif', 'jpeg'],
             overwriteInitial: false,
             maxFileSize: 2000,
             maxFilesNum: 10,
             slugCallback: function (filename) {
-                return filename.replace('(', '_').replace(']', '_');
+                // console.log(filename.replace('(', '_').replace(']', '_').replace(' ','_').replace('-','_'))
+                // return filename.replace('(', '_').replace(']', '_').replace(' ','_').replace('-','_');
+                // filename = filename.replace(' ','_').replace('  ','_').replace('(','_').replace(']','_').replace('-','_');
+                console.log(filename)
+                return  filename.replaceAll(' ','_').replaceAll('  ','_').replaceAll('(','_').replaceAll(']','_').replaceAll('-','_');
             }
         });
+        console.log('1132131231\n:1111111111111',$("#file-1").val());
     </script>
 
 </body>

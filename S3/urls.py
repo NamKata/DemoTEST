@@ -9,6 +9,7 @@ urlpatterns=[
     path('uploaddemo/', views.upload_file_demo, name='postupload'),
     path('upload-N-N-Images/', views.upload_mutiple_file, name ='upload-mutiple'),
     path('search_bucket/',views.search_bucket, name='search'),
-    path('list/', views.list_image, name='list'),
-    path('test/', views.upload_in_request, name='test')
+    path('list/<bucket>', views.list_image, name='list'),
+    path('test/', views.upload_in_request, name='test'),
+    path('link/', views.list_url_demo, name='1132'),
 ]
