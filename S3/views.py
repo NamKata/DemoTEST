@@ -11,7 +11,9 @@ import uuid
 import os
 from Main import settings
 from django.core.files.storage import FileSystemStorage
-from .utils import handle_check_exists_bucket, handle_create_bucket_request, handle_upload_mutiplefile_in_bucket, handle_check_is_empty, handle_presigned_url
+from .utils import handle_check_exists_bucket, handle_create_bucket_request, \
+    handle_upload_mutiplefile_in_bucket, handle_check_is_empty, handle_presigned_url, \
+    handle_download_file_s3, handle_presigned_url_set_timeout
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 @api_view(['GET'])
@@ -159,26 +161,34 @@ def list_image(request, bucket):
         'Success':False,
         'message':''
     }
-    # bucket = request.POST['bucket']
-    # print('131231312',bucket)
-    pre_sign= handle_presigned_url(bucket)
+    # -- generate presigned post
+    # pre_sign= handle_presigned_url(bucket)
+    # -- generate presigned url
+    pre_sign = handle_presigned_url_set_timeout(bucket)
     print(pre_sign)
     if pre_sign is None:
         return Response(result, status= status.HTTP_400_BAD_REQUEST)
     else:
-        url =[]
+        # -- generate presigned post
+        # url =[]
         result['Success'] = True 
         result['message']=''
-        for pre in pre_sign:
-            link = '%s%s'%(pre['url'], pre['fields']['key'])
-            # print(link)
-            url.append(link)
-        result['data']= {
-            'urlimages':url,
-            'bucket':bucket,
-            'presigned':pre_sign
+        # for pre in pre_sign:
+        #     link = '%s%s'%(pre['url'], pre['fields']['key'])
+        #     # print(link)
+        #     url.append(link)
+        # result['data']= {
+        #     'urlimages':url,
+        #     'bucket':bucket,
+        #     'presigned':pre_sign
+        # }
+
+        # -- generate presinged url set time out
+        result['data']={
+            'urlimages':pre_sign,
+            'bucket':bucket
         }
-        # return Response(result, status = status.HTTP_200_OK) 
+
         return render(request, 'listImages.html', result)
 
 
@@ -212,24 +222,34 @@ def list_url_demo(request):
         'message':''
     }
     bucket = request.POST['bucket']
-    print('131231312',bucket)
-    pre_sign= handle_presigned_url(bucket)
+    pre_sign= handle_presigned_url_set_timeout(bucket)
     print(pre_sign)
+    # return Response(pre_sign)
     if pre_sign is None:
         return Response(result, status= status.HTTP_400_BAD_REQUEST)
     else:
         url =[]
         result['Success'] = True 
         result['message']=''
-        for pre in pre_sign:
-            print(pre)
-            print('=>>>>>>>>>>> url:', pre['url'])
-            link = '%s%s'%(pre['url'], pre['fields']['key'])
-            print(link)
-            url.append(link)
+        # for pre in pre_sign:
+        #     link = '%s%s'%(pre['url'], pre['fields']['key'])
+        #     url.append(link)
         result['data']= {
-            'urlimages':url,
+            'urlimages':pre_sign,
             'bucket':bucket,
             'presigned':pre_sign
         }
-        return Response(result, status = status.HTTP_200_OK) 
+        return Response(result, status = status.HTTP_200_OK)
+
+def download_file(request, bucket):
+    if handle_download_file_s3(bucket) == True:
+        return redirect('test')
+    return redirect('list', bucket)
+import json
+@api_view(['POST'])
+def get_location_request(request):
+    upload = request.FILES['files']
+    # path= os.path.abspath(upload.name)
+    path = json.dumps(upload)
+    print(path)
+    return Response(path)

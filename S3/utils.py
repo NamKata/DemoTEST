@@ -51,39 +51,63 @@ def handle_create_bucket_request(bucket):
             return None
 
 def handle_upload_mutiplefile_in_bucket(files, bucket):
-    link = os.path.join(BASE_DIR)
-    fs = FileSystemStorage()
+    link = os.path.join(BASE_DIR)+'/media/'+bucket
+    fs = FileSystemStorage(BASE_DIR+'/media/'+bucket)
     if handle_create_bucket_request(bucket) is None:
         return False;
     else:
         for photo in files:
-                print(photo)
-                try:
-                    downFile =fs.save(photo.name.replace(' ','_').replace('-','_').replace('(','_'), photo)
-                    urlImg = '%s%s'%(link,fs.url(downFile))
-                    content = photo.name.replace(' ','_').replace('-','_').replace('(','_')
-                    s3.upload_file(urlImg,bucket,content,ExtraArgs={"ACL": "public-read"})
-                except Exception as ex:
-                    print(ex)
-                    return None
+            try:
+                downFile =fs.save(photo.name.replace(' ','_').replace('-','_').replace('(','_'), photo)
+                print(fs.url(downFile))
+                urlImg = '%s%s'%(link,fs.url(downFile).replace('/media',''))
+                content = photo.name.replace(' ','_').replace('-','_').replace('(','_')
+                s3.upload_file(urlImg,bucket,content,ExtraArgs={"ACL": "public-read"})
+            except Exception as ex:
+                print(ex)
+                return None
         return True
 
 def handle_presigned_url(bucket):
     if handle_check_exists_bucket(bucket) == True:
-        print("First")
         url =[]
         buckets = s3_rs.Bucket(bucket)
         for k in buckets.objects.all():
-            print(k.key)
             url.append(create_presigned_url(bucket, k.key))
-        print(url)
+        return url
+    return None
+def handle_presigned_url_set_timeout(bucket):
+    if handle_check_exists_bucket(bucket) == True:
+        url =[]
+        buckets = s3_rs.Bucket(bucket)
+        for k in buckets.objects.all():
+            url.append(create_presigned_url_set_timeout(bucket, k.key))
         return url
     return None
 def create_presigned_url(bucket, object_name):
     try:
-        print("11231")
         response = s3.generate_presigned_post(bucket, object_name)
     except Exception as e:
         print(e)
         return None
     return response
+def create_presigned_url_set_timeout(bucket, object_name):
+    try:
+        # ExpiresIn = 1 min
+        response = s3.generate_presigned_url('get_object', Params={'Bucket':bucket,'Key':object_name}, ExpiresIn=60)
+    except Exception as e:
+        print(e)
+        return None
+    return response
+def handle_download_file_s3(bucket):
+    if handle_check_exists_bucket(bucket) == True:
+        bucket_obj = s3_rs.Bucket(bucket)
+        try:
+            for file in bucket_obj.objects.all():
+                bucket_obj.download_file(file.key, BASE_DIR+"/media/download/"+file.key)
+            return True
+        except Exception as e:
+            print(e)
+            return False
+    return None
+

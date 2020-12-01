@@ -90,6 +90,7 @@
             overwriteInitial: false,
             maxFileSize: 2000,
             maxFilesNum: 10,
+            
             slugCallback: function (filename) {
                 // console.log(filename.replace('(', '_').replace(']', '_').replace(' ','_').replace('-','_'))
                 // return filename.replace('(', '_').replace(']', '_').replace(' ','_').replace('-','_');
@@ -98,7 +99,6 @@
                 return  filename.replaceAll(' ','_').replaceAll('  ','_').replaceAll('(','_').replaceAll(']','_').replaceAll('-','_');
             }
         });
-        console.log('1132131231\n:1111111111111',$("#file-1").val());
     </script>
 
 </body>

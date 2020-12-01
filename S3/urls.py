@@ -12,4 +12,6 @@ urlpatterns=[
     path('list/<bucket>', views.list_image, name='list'),
     path('test/', views.upload_in_request, name='test'),
     path('link/', views.list_url_demo, name='1132'),
+    path('download/<bucket>', views.download_file, name ='download'),
+    path('get_location_request/', views.get_location_request, name='sfafftasd')
 ]
